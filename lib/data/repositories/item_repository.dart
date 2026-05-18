@@ -3,27 +3,17 @@ import '../models/item_model.dart';
 
 class ItemRepository {
   final Dio _dio = Dio(BaseOptions(
-    baseUrl: 'https://jsonplaceholder.typicode.com',
+    baseUrl: 'https://6a0ad2e921e445625696aaa2.mockapi.io',
     connectTimeout: const Duration(seconds: 10),
     receiveTimeout: const Duration(seconds: 10),
   ));
 
-  // READ — fetch first 20 posts and treat them as lost/found items
+  // READ
   Future<List<LostFoundItem>> fetchItems() async {
     try {
-      final response = await _dio.get('/posts', queryParameters: {'_limit': 20});
-      if (response.statusCode == 200) {
-        final List data = response.data as List;
-        // Alternate type so the list looks realistic
-        return data.asMap().entries.map((e) {
-          final json = Map<String, dynamic>.from(e.value);
-          json['type'] = e.key.isEven ? 'Lost' : 'Found';
-          json['status'] = 'Active';
-          json['location'] = 'Campus';
-          return LostFoundItem.fromJson(json);
-        }).toList();
-      }
-      throw Exception('Unexpected status code');
+      final response = await _dio.get('/items');
+      final List data = response.data as List;
+      return data.map((e) => LostFoundItem.fromJson(e as Map<String, dynamic>)).toList();
     } on DioException catch (e) {
       throw Exception(_handleDioError(e));
     }
@@ -32,14 +22,8 @@ class ItemRepository {
   // CREATE
   Future<LostFoundItem> createItem(LostFoundItem item) async {
     try {
-      final response = await _dio.post('/posts', data: item.toJson());
-      final json = Map<String, dynamic>.from(response.data);
-      // JSONPlaceholder echoes back the body; preserve our extra fields
-      json['location'] = item.location;
-      json['contactInfo'] = item.contactInfo;
-      json['type'] = item.type;
-      json['status'] = item.status;
-      return LostFoundItem.fromJson(json);
+      final response = await _dio.post('/items', data: item.toJson());
+      return LostFoundItem.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw Exception(_handleDioError(e));
     }
@@ -48,16 +32,8 @@ class ItemRepository {
   // UPDATE
   Future<LostFoundItem> updateItem(String id, LostFoundItem item) async {
     try {
-      // JSONPlaceholder only has ids 1-100; use PUT on /posts/1 as a demo
-      final safeId = int.tryParse(id) != null && int.parse(id) <= 100 ? id : '1';
-      final response = await _dio.put('/posts/$safeId', data: item.toJson());
-      final json = Map<String, dynamic>.from(response.data);
-      json['id'] = id; // keep original id
-      json['location'] = item.location;
-      json['contactInfo'] = item.contactInfo;
-      json['type'] = item.type;
-      json['status'] = item.status;
-      return LostFoundItem.fromJson(json);
+      final response = await _dio.put('/items/$id', data: item.toJson());
+      return LostFoundItem.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw Exception(_handleDioError(e));
     }
@@ -66,8 +42,7 @@ class ItemRepository {
   // DELETE
   Future<void> deleteItem(String id) async {
     try {
-      final safeId = int.tryParse(id) != null && int.parse(id) <= 100 ? id : '1';
-      await _dio.delete('/posts/$safeId');
+      await _dio.delete('/items/$id');
     } on DioException catch (e) {
       throw Exception(_handleDioError(e));
     }
@@ -76,13 +51,13 @@ class ItemRepository {
   String _handleDioError(DioException error) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
-        return 'Connection timeout with the server.';
+        return 'Connection timeout. Check your internet.';
       case DioExceptionType.receiveTimeout:
-        return 'Server response timeout.';
+        return 'Server took too long to respond.';
       case DioExceptionType.badResponse:
         return 'Server error: ${error.response?.statusCode}';
       default:
-        return 'Something went wrong with the network.';
+        return 'Network error: ${error.message}';
     }
   }
 }

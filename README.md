@@ -1,18 +1,51 @@
-# second
+# Campus Lost & Found 📋
 
-A new Flutter project.
+A Flutter application for reporting and tracking lost & found items on campus. Built with Bloc state management and Dio for network requests.
 
-## Getting Started
+## Features
+- 📋 View all lost & found reports
+- ➕ Create new reports
+- ✏️ Edit existing reports
+- 🗑️ Delete reports
+- 🔍 Search by title or location
+- 🏷️ Filter by All / Lost / Found
 
-This project is a starting point for a Flutter application.
+## Tech Stack
+- **Flutter** — UI framework
+- **flutter_bloc** — state management
+- **Dio** — HTTP network requests
+- **MockAPI** — REST API backend
 
-A few resources to get you started if this is your first Flutter project:
+## Project Structure
+```
+lib/
+├── bloc/
+│   ├── item_cubit.dart
+│   └── item_state.dart
+├── data/
+│   ├── models/
+│   │   └── item_model.dart
+│   └── repositories/
+│       └── item_repository.dart
+├── presentation/
+│   ├── screens/
+│   │   ├── home_screen.dart
+│   │   └── add_edit_screen.dart
+│   └── widgets/
+│       └── status_badge.dart
+└── main.dart
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Screenshots
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-# mobile_project_dio-bloc
-# mobile_project_dio-bloc
+### Home Screen
+![Home Screen](screenshots/home.png)
+
+### Add New Item
+![Add Item](screenshots/add.png)
+
+### Edit Item
+![Edit Item](screenshots/edit.png)
+
+### After Delete
+![After Delete](screenshots/delete.png)

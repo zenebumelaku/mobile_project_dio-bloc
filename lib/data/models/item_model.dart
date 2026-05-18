@@ -4,7 +4,7 @@ class LostFoundItem {
   final String description;
   final String location;
   final String contactInfo;
-  final String type; // 'Lost' or 'Found'
+  final String type;   // 'Lost' or 'Found'
   final String status; // 'Active' or 'Claimed'
 
   LostFoundItem({
@@ -17,31 +17,24 @@ class LostFoundItem {
     required this.status,
   });
 
-  // JSONPlaceholder /posts: { id, title, body, userId }
-  // We store extra fields (location, type, status) locally since
-  // JSONPlaceholder ignores unknown fields on POST/PUT but echoes them back.
   factory LostFoundItem.fromJson(Map<String, dynamic> json) {
     return LostFoundItem(
       id: json['id']?.toString(),
-      title: json['title'] ?? '',
-      description: json['body'] ?? json['description'] ?? '',
-      location: json['location'] ?? 'Campus',
-      contactInfo: json['userId']?.toString() ?? json['contactInfo'] ?? '',
-      type: json['type'] ?? 'Lost',
-      status: json['status'] ?? 'Active',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      location: json['location']?.toString() ?? '',
+      contactInfo: json['contactInfo']?.toString() ?? '',
+      type: json['type']?.toString() ?? 'Lost',
+      status: json['status']?.toString() ?? 'Active',
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      if (id != null) 'id': id,
-      'title': title,
-      'body': description,
-      'userId': 1,
-      'location': location,
-      'contactInfo': contactInfo,
-      'type': type,
-      'status': status,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        'title': title,
+        'description': description,
+        'location': location,
+        'contactInfo': contactInfo,
+        'type': type,
+        'status': status,
+      };
 }

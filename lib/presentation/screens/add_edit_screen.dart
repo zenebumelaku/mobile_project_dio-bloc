@@ -26,193 +26,295 @@ class _AddEditScreenState extends State<AddEditScreen> {
     _status = widget.item?.status ?? 'Active';
   }
 
+  bool get _isEdit => widget.item != null;
+
   @override
   Widget build(BuildContext context) {
-    final isEdit = widget.item != null;
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4F3),
-      appBar: AppBar(
-        backgroundColor: cs.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          isEdit ? 'Edit Report' : 'New Report',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => Navigator.pop(context),
+      backgroundColor: const Color(0xFFF2F6F5),
+      body: Column(
+        children: [
+          _buildHeader(cs),
+          Expanded(
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
+                children: [
+                  _buildTypeSelector(),
+                  if (_isEdit) ...[
+                    const SizedBox(height: 12),
+                    _buildStatusSelector(),
+                  ],
+                  const SizedBox(height: 12),
+                  _buildCard(
+                    icon: Icons.info_outline_rounded,
+                    title: 'Item Details',
+                    child: Column(
+                      children: [
+                        _buildField(
+                          label: 'Item Name',
+                          hint: 'e.g. Blue backpack, iPhone 14...',
+                          icon: Icons.label_outline_rounded,
+                          initialValue: _title,
+                          validator: (v) =>
+                              v!.trim().isEmpty ? 'Item name is required' : null,
+                          onSaved: (v) => _title = v!.trim(),
+                        ),
+                        const SizedBox(height: 14),
+                        _buildField(
+                          label: 'Description',
+                          hint: 'Describe the item in detail...',
+                          icon: Icons.notes_rounded,
+                          initialValue: _description,
+                          maxLines: 3,
+                          onSaved: (v) => _description = v!.trim(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildCard(
+                    icon: Icons.place_outlined,
+                    title: 'Where & Who',
+                    child: Column(
+                      children: [
+                        _buildField(
+                          label: 'Campus Location',
+                          hint: 'e.g. Library, Block C, Cafeteria...',
+                          icon: Icons.location_on_outlined,
+                          initialValue: _location,
+                          validator: (v) =>
+                              v!.trim().isEmpty ? 'Location is required' : null,
+                          onSaved: (v) => _location = v!.trim(),
+                        ),
+                        const SizedBox(height: 14),
+                        _buildField(
+                          label: 'Contact Info',
+                          hint: 'Phone number or email...',
+                          icon: Icons.contact_phone_outlined,
+                          initialValue: _contactInfo,
+                          validator: (v) =>
+                              v!.trim().isEmpty ? 'Contact is required' : null,
+                          onSaved: (v) => _contactInfo = v!.trim(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildSubmitButton(cs),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(ColorScheme cs) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF00695C), Color(0xFF00897B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Type selector
-            _SectionCard(
-              title: 'Report Type',
-              child: Row(
-                children: ['Lost', 'Found'].map((type) {
-                  final selected = _type == type;
-                  final color = type == 'Lost'
-                      ? const Color(0xFFE53935)
-                      : const Color(0xFF43A047);
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _type = type),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: EdgeInsets.only(
-                            right: type == 'Lost' ? 8 : 0),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? color
-                              : color.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: selected
-                                  ? color
-                                  : color.withOpacity(0.3)),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              type == 'Lost'
-                                  ? Icons.search_rounded
-                                  : Icons.volunteer_activism_rounded,
-                              color: selected ? Colors.white : color,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              type,
-                              style: TextStyle(
-                                color: selected ? Colors.white : color,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(4, 8, 16, 20),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
               ),
-            ),
-
-            if (isEdit)
-              _SectionCard(
-                title: 'Status',
-                child: Row(
-                  children: ['Active', 'Claimed'].map((s) {
-                    final selected = _status == s;
-                    final color = s == 'Active' ? Colors.green : Colors.blueGrey;
-                    return Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _status = s),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          margin: EdgeInsets.only(right: s == 'Active' ? 8 : 0),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: selected
-                                ? color
-                                : color.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                                color: selected
-                                    ? color
-                                    : color.withOpacity(0.3)),
-                          ),
-                          child: Text(
-                            s,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: selected ? Colors.white : color,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-
-            // Details
-            _SectionCard(
-              title: 'Item Details',
-              child: Column(
+              const SizedBox(width: 4),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _Field(
-                    label: 'Item Name',
-                    icon: Icons.label_rounded,
-                    initialValue: _title,
-                    validator: (v) => v!.isEmpty ? 'Required' : null,
-                    onSaved: (v) => _title = v!,
+                  Text(
+                    _isEdit ? 'Edit Report' : 'New Report',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 12),
-                  _Field(
-                    label: 'Description',
-                    icon: Icons.notes_rounded,
-                    initialValue: _description,
-                    maxLines: 3,
-                    onSaved: (v) => _description = v!,
+                  Text(
+                    _isEdit
+                        ? 'Update the item details'
+                        : 'Fill in the details below',
+                    style: const TextStyle(color: Colors.white60, fontSize: 13),
                   ),
                 ],
               ),
-            ),
+              const Spacer(),
+              Text(_isEdit ? '✏️' : '📝',
+                  style: const TextStyle(fontSize: 28)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-            // Location & Contact
-            _SectionCard(
-              title: 'Location & Contact',
-              child: Column(
-                children: [
-                  _Field(
-                    label: 'Campus Location',
-                    icon: Icons.location_on_rounded,
-                    initialValue: _location,
-                    validator: (v) => v!.isEmpty ? 'Required' : null,
-                    onSaved: (v) => _location = v!,
-                  ),
-                  const SizedBox(height: 12),
-                  _Field(
-                    label: 'Contact (Phone / Email)',
-                    icon: Icons.contact_phone_rounded,
-                    initialValue: _contactInfo,
-                    validator: (v) => v!.isEmpty ? 'Required' : null,
-                    onSaved: (v) => _contactInfo = v!,
-                  ),
-                ],
-              ),
-            ),
+  Widget _buildTypeSelector() {
+    return Row(
+      children: [
+        _TypeOption(
+          emoji: '🔍',
+          label: 'Lost',
+          subtitle: 'I lost something',
+          color: const Color(0xFFE53935),
+          selected: _type == 'Lost',
+          onTap: () => setState(() => _type = 'Lost'),
+        ),
+        const SizedBox(width: 12),
+        _TypeOption(
+          emoji: '🎒',
+          label: 'Found',
+          subtitle: 'I found something',
+          color: const Color(0xFF43A047),
+          selected: _type == 'Found',
+          onTap: () => setState(() => _type = 'Found'),
+        ),
+      ],
+    );
+  }
 
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 52,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: cs.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                  elevation: 0,
-                ),
-                onPressed: _submit,
-                child: Text(
-                  isEdit ? 'Save Changes' : 'Submit Report',
+  Widget _buildStatusSelector() {
+    return Row(
+      children: [
+        _TypeOption(
+          emoji: '🟢',
+          label: 'Active',
+          subtitle: 'Still looking',
+          color: Colors.green,
+          selected: _status == 'Active',
+          onTap: () => setState(() => _status = 'Active'),
+        ),
+        const SizedBox(width: 12),
+        _TypeOption(
+          emoji: '🎉',
+          label: 'Claimed',
+          subtitle: 'Resolved',
+          color: Colors.blueGrey,
+          selected: _status == 'Claimed',
+          onTap: () => setState(() => _status = 'Claimed'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCard(
+      {required IconData icon,
+      required String title,
+      required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: const Color(0xFF00897B)),
+              const SizedBox(width: 6),
+              Text(title,
                   style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      color: Color(0xFF00897B))),
+            ],
+          ),
+          const SizedBox(height: 14),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildField({
+    required String label,
+    required String hint,
+    required IconData icon,
+    required String initialValue,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+    required void Function(String?) onSaved,
+  }) {
+    return TextFormField(
+      initialValue: initialValue,
+      maxLines: maxLines,
+      style: const TextStyle(fontSize: 14),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+        prefixIcon: Icon(icon, size: 18, color: Colors.grey[500]),
+        filled: true,
+        fillColor: const Color(0xFFF8FAFA),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide:
+              const BorderSide(color: Color(0xFF00897B), width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 1),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      ),
+      validator: validator,
+      onSaved: onSaved,
+    );
+  }
+
+  Widget _buildSubmitButton(ColorScheme cs) {
+    return SizedBox(
+      height: 54,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF00897B),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+        onPressed: _submit,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(_isEdit ? Icons.save_rounded : Icons.send_rounded, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              _isEdit ? 'Save Changes' : 'Submit Report',
+              style: const TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -222,7 +324,7 @@ class _AddEditScreenState extends State<AddEditScreen> {
   void _submit() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      final itemObj = LostFoundItem(
+      final item = LostFoundItem(
         id: widget.item?.id,
         title: _title,
         description: _description,
@@ -231,81 +333,82 @@ class _AddEditScreenState extends State<AddEditScreen> {
         type: _type,
         status: _status,
       );
-      if (widget.item != null) {
-        context.read<ItemCubit>().editItem(itemObj);
+      if (_isEdit) {
+        context.read<ItemCubit>().editItem(item);
       } else {
-        context.read<ItemCubit>().addItem(itemObj);
+        context.read<ItemCubit>().addItem(item);
       }
       Navigator.pop(context);
     }
   }
 }
 
-class _SectionCard extends StatelessWidget {
-  final String title;
-  final Widget child;
-  const _SectionCard({required this.title, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: Colors.grey)),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _Field extends StatelessWidget {
+class _TypeOption extends StatelessWidget {
+  final String emoji;
   final String label;
-  final IconData icon;
-  final String initialValue;
-  final int maxLines;
-  final String? Function(String?)? validator;
-  final void Function(String?) onSaved;
+  final String subtitle;
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
 
-  const _Field({
+  const _TypeOption({
+    required this.emoji,
     required this.label,
-    required this.icon,
-    required this.initialValue,
-    this.maxLines = 1,
-    this.validator,
-    required this.onSaved,
+    required this.subtitle,
+    required this.color,
+    required this.selected,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      initialValue: initialValue,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, size: 20),
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+          decoration: BoxDecoration(
+            color: selected ? color : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: selected ? color : Colors.grey[200]!,
+              width: 1.5,
+            ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: color.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    )
+                  ]
+                : [],
+          ),
+          child: Row(
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 22)),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label,
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: selected ? Colors.white : Colors.grey[800])),
+                  Text(subtitle,
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: selected
+                              ? Colors.white70
+                              : Colors.grey[500])),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
-      validator: validator,
-      onSaved: onSaved,
     );
   }
 }

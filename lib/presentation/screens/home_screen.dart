@@ -10,219 +10,344 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4F3),
-      body: Column(
+      backgroundColor: const Color(0xFFF2F6F5),
+      body: Stack(
         children: [
-          _Header(cs: cs),
-          _SearchAndFilter(cs: cs),
-          Expanded(child: _ItemList(cs: cs)),
+          Column(
+            children: [
+              const _Header(),
+              const _SearchBar(),
+              const _FilterTabs(),
+              const Expanded(child: _ItemList()),
+            ],
+          ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const AddEditScreen()),
+      floatingActionButton: _AddFAB(),
+    );
+  }
+}
+
+class _AddFAB extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: () => Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, a, b) => const AddEditScreen(),
+          transitionsBuilder: (_, a, b, child) =>
+              SlideTransition(
+                position: Tween(
+                  begin: const Offset(0, 1),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(parent: a, curve: Curves.easeOutCubic)),
+                child: child,
+              ),
         ),
-        backgroundColor: cs.primary,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Report Item', style: TextStyle(fontWeight: FontWeight.w600)),
       ),
+      backgroundColor: const Color(0xFF00897B),
+      child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
     );
   }
 }
 
 class _Header extends StatelessWidget {
-  final ColorScheme cs;
-  const _Header({required this.cs});
+  const _Header();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [cs.primary, cs.tertiary],
+          colors: [Color(0xFF00695C), Color(0xFF00897B)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
       child: SafeArea(
         bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 8, 20),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.location_on_rounded, color: Colors.white70, size: 20),
-                  const SizedBox(width: 6),
-                  Text('Campus Lost & Found',
-                      style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 13)),
-                  const Spacer(),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.school_rounded,
+                                      color: Colors.white70, size: 14),
+                                  SizedBox(width: 4),
+                                  Text('Campus Board',
+                                      style: TextStyle(
+                                          color: Colors.white70, fontSize: 12)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        const Text('Lost & Found',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.5)),
+                        const Text('Report · Search · Recover',
+                            style: TextStyle(
+                                color: Colors.white60,
+                                fontSize: 13,
+                                letterSpacing: 0.5)),
+                      ],
+                    ),
+                  ),
                   BlocBuilder<ItemCubit, ItemState>(
                     builder: (context, state) => IconButton(
-                      icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+                      icon: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.refresh_rounded,
+                            color: Colors.white, size: 20),
+                      ),
                       onPressed: () => context.read<ItemCubit>().getItems(),
-                      tooltip: 'Refresh',
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
-              const Text('Find What\nYou\'ve Lost 🔍',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      height: 1.2)),
-              const SizedBox(height: 16),
-              BlocBuilder<ItemCubit, ItemState>(
-                builder: (context, state) {
-                  int total = 0, lost = 0, found = 0;
-                  if (state is ItemLoaded) {
-                    total = state.allItems.length;
-                    lost = state.allItems.where((i) => i.type == 'Lost').length;
-                    found = state.allItems.where((i) => i.type == 'Found').length;
-                  }
-                  return Row(
+            ),
+            // Stats row
+            BlocBuilder<ItemCubit, ItemState>(
+              builder: (context, state) {
+                int total = 0, lost = 0, found = 0, claimed = 0;
+                if (state is ItemLoaded) {
+                  total = state.allItems.length;
+                  lost = state.allItems.where((i) => i.type == 'Lost').length;
+                  found = state.allItems.where((i) => i.type == 'Found').length;
+                  claimed =
+                      state.allItems.where((i) => i.status == 'Claimed').length;
+                }
+                return Container(
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _StatChip(label: 'Total', value: total, icon: Icons.list_alt_rounded),
-                      const SizedBox(width: 10),
-                      _StatChip(label: 'Lost', value: lost, icon: Icons.search_off_rounded),
-                      const SizedBox(width: 10),
-                      _StatChip(label: 'Found', value: found, icon: Icons.check_circle_outline_rounded),
+                      _StatItem(value: total, label: 'Total', icon: '📋'),
+                      _Divider(),
+                      _StatItem(value: lost, label: 'Lost', icon: '🔍'),
+                      _Divider(),
+                      _StatItem(value: found, label: 'Found', icon: '✅'),
+                      _Divider(),
+                      _StatItem(value: claimed, label: 'Claimed', icon: '🎉'),
                     ],
-                  );
-                },
-              ),
-            ],
-          ),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _StatChip extends StatelessWidget {
-  final String label;
+class _Divider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(width: 1, height: 30, color: Colors.white24);
+  }
+}
+
+class _StatItem extends StatelessWidget {
   final int value;
-  final IconData icon;
-  const _StatChip({required this.label, required this.value, required this.icon});
+  final String label;
+  final String icon;
+  const _StatItem(
+      {required this.value, required this.label, required this.icon});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white, size: 16),
-          const SizedBox(width: 6),
-          Text('$value $label',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
-        ],
-      ),
+    return Column(
+      children: [
+        Text(icon, style: const TextStyle(fontSize: 16)),
+        const SizedBox(height: 2),
+        Text('$value',
+            style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18)),
+        Text(label,
+            style: const TextStyle(color: Colors.white60, fontSize: 11)),
+      ],
     );
   }
 }
 
-class _SearchAndFilter extends StatelessWidget {
-  final ColorScheme cs;
-  const _SearchAndFilter({required this.cs});
+class _SearchBar extends StatelessWidget {
+  const _SearchBar();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      child: Column(
-        children: [
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Search by title or location...',
-              prefixIcon: Icon(Icons.search_rounded, color: cs.primary),
-              hintStyle: const TextStyle(color: Colors.grey),
-            ),
-            onChanged: (val) =>
-                context.read<ItemCubit>().applyFilterAndSearch(search: val),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Search items, locations...',
+          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+          prefixIcon:
+              const Icon(Icons.search_rounded, color: Color(0xFF00897B)),
+          suffixIcon: Icon(Icons.tune_rounded, color: Colors.grey[400]),
+          filled: true,
+          fillColor: const Color(0xFFF2F6F5),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
           ),
-          const SizedBox(height: 12),
-          BlocBuilder<ItemCubit, ItemState>(
-            builder: (context, state) {
-              String current = 'All';
-              if (state is ItemLoaded) current = state.selectedFilter;
-              return Row(
-                children: ['All', 'Lost', 'Found'].map((type) {
-                  final selected = current == type;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: GestureDetector(
-                      onTap: () => context
-                          .read<ItemCubit>()
-                          .applyFilterAndSearch(filter: type),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 18, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: selected ? cs.primary : const Color(0xFFF0F4F3),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          type,
-                          style: TextStyle(
-                            color: selected ? Colors.white : Colors.grey[700],
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              );
-            },
-          ),
-        ],
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        onChanged: (val) =>
+            context.read<ItemCubit>().applyFilterAndSearch(search: val),
       ),
     );
   }
 }
 
+class _FilterTabs extends StatelessWidget {
+  const _FilterTabs();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ItemCubit, ItemState>(
+      builder: (context, state) {
+        String current = 'All';
+        if (state is ItemLoaded) current = state.selectedFilter;
+
+        return Container(
+          color: Colors.white,
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+          child: Row(
+            children: [
+              for (final tab in [
+                ('All', Icons.apps_rounded, Colors.grey),
+                ('Lost', Icons.search_off_rounded, Color(0xFFE53935)),
+                ('Found', Icons.volunteer_activism_rounded, Color(0xFF43A047)),
+              ])
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => context
+                        .read<ItemCubit>()
+                        .applyFilterAndSearch(filter: tab.$1),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      decoration: BoxDecoration(
+                        color: current == tab.$1
+                            ? tab.$3.withOpacity(0.12)
+                            : const Color(0xFFF2F6F5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: current == tab.$1
+                              ? tab.$3
+                              : Colors.transparent,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(tab.$2,
+                              size: 15,
+                              color: current == tab.$1
+                                  ? tab.$3
+                                  : Colors.grey[500]),
+                          const SizedBox(width: 5),
+                          Text(
+                            tab.$1,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: current == tab.$1
+                                  ? tab.$3
+                                  : Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _ItemList extends StatelessWidget {
-  final ColorScheme cs;
-  const _ItemList({required this.cs});
+  const _ItemList();
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ItemCubit, ItemState>(
       builder: (context, state) {
         if (state is ItemLoading) {
-          return Center(child: CircularProgressIndicator(color: cs.primary));
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFF00897B)),
+          );
         }
         if (state is ItemError) {
           return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.wifi_off_rounded, size: 64, color: Colors.grey[400]),
-                const SizedBox(height: 12),
-                Text(state.message,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 15)),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () => context.read<ItemCubit>().getItems(),
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Retry'),
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('😕', style: TextStyle(fontSize: 56)),
+                  const SizedBox(height: 12),
+                  Text(state.message,
+                      textAlign: TextAlign.center,
+                      style:
+                          TextStyle(color: Colors.grey[600], fontSize: 14)),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00897B),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => context.read<ItemCubit>().getItems(),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Try Again'),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -232,28 +357,29 @@ class _ItemList extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.inbox_rounded, size: 72, color: Colors.grey[300]),
+                  const Text('📭', style: TextStyle(fontSize: 60)),
                   const SizedBox(height: 12),
-                  Text('No items found',
+                  Text('Nothing here yet',
                       style: TextStyle(
-                          color: Colors.grey[500],
+                          color: Colors.grey[600],
                           fontSize: 17,
                           fontWeight: FontWeight.w600)),
                   const SizedBox(height: 4),
-                  Text('Tap + to report a lost or found item',
-                      style: TextStyle(color: Colors.grey[400], fontSize: 13)),
+                  Text('Tap + to add a report',
+                      style:
+                          TextStyle(color: Colors.grey[400], fontSize: 13)),
                 ],
               ),
             );
           }
           return RefreshIndicator(
             onRefresh: () => context.read<ItemCubit>().getItems(),
-            color: cs.primary,
+            color: const Color(0xFF00897B),
             child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 100),
               itemCount: state.filteredItems.length,
               itemBuilder: (context, index) =>
-                  _ItemCard(item: state.filteredItems[index], cs: cs),
+                  _ItemCard(item: state.filteredItems[index]),
             ),
           );
         }
@@ -265,14 +391,22 @@ class _ItemList extends StatelessWidget {
 
 class _ItemCard extends StatelessWidget {
   final LostFoundItem item;
-  final ColorScheme cs;
-  const _ItemCard({required this.item, required this.cs});
+  const _ItemCard({required this.item});
+
+  Color get _typeColor =>
+      item.type == 'Lost' ? const Color(0xFFE53935) : const Color(0xFF43A047);
+
+  String get _initials {
+    final words = item.title.trim().split(' ');
+    if (words.length >= 2) {
+      return '${words[0][0]}${words[1][0]}'.toUpperCase();
+    }
+    return item.title.isNotEmpty ? item.title[0].toUpperCase() : '?';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isLost = item.type == 'Lost';
     final isClaimed = item.status == 'Claimed';
-    final typeColor = isLost ? const Color(0xFFE53935) : const Color(0xFF43A047);
 
     return Dismissible(
       key: Key(item.id ?? item.title),
@@ -280,146 +414,166 @@ class _ItemCard extends StatelessWidget {
       background: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.red[400],
+          gradient: const LinearGradient(
+              colors: [Color(0xFFEF5350), Color(0xFFB71C1C)]),
           borderRadius: BorderRadius.circular(16),
         ),
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        child: const Icon(Icons.delete_rounded, color: Colors.white, size: 28),
+        padding: const EdgeInsets.only(right: 24),
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.delete_rounded, color: Colors.white, size: 26),
+            SizedBox(height: 4),
+            Text('Delete',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold)),
+          ],
+        ),
       ),
-      confirmDismiss: (_) async {
-        return await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Text('Delete Item'),
-            content: Text('Remove "${item.title}" from the board?'),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Cancel')),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Delete', style: TextStyle(color: Colors.white)),
-              ),
-            ],
-          ),
-        );
-      },
+      confirmDismiss: (_) => showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Remove Item?'),
+          content: Text(
+              '"${item.title}" will be removed from the board.'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Delete'),
+            ),
+          ],
+        ),
+      ),
       onDismissed: (_) => context.read<ItemCubit>().removeItem(item.id!),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: _typeColor.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
-        child: IntrinsicHeight(
+        child: Padding(
+          padding: const EdgeInsets.all(14),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Left color bar + icon
+              // Avatar
               Container(
-                width: 56,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: typeColor.withOpacity(0.1),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    bottomLeft: Radius.circular(16),
+                  gradient: LinearGradient(
+                    colors: [
+                      _typeColor,
+                      _typeColor.withOpacity(0.7),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      isLost ? Icons.search_rounded : Icons.volunteer_activism_rounded,
-                      color: typeColor,
-                      size: 26,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(item.type,
-                        style: TextStyle(
-                            color: typeColor,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold)),
-                  ],
+                child: Center(
+                  child: Text(_initials,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
                 ),
               ),
+              const SizedBox(width: 12),
               // Content
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              item.title,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 15),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.title,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                                color: Color(0xFF1A1A2E)),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          _StatusPill(isClaimed: isClaimed),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.location_on_rounded,
-                              size: 13, color: Colors.grey[500]),
-                          const SizedBox(width: 3),
-                          Text(item.location,
-                              style: TextStyle(
-                                  color: Colors.grey[500], fontSize: 12)),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
+                        ),
+                        const SizedBox(width: 8),
+                        _TypeBadge(type: item.type, color: _typeColor),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    if (item.description.isNotEmpty)
                       Text(
                         item.description,
-                        style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                        style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 12.5,
+                            height: 1.4),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.person_outline_rounded,
-                              size: 13, color: Colors.grey[400]),
-                          const SizedBox(width: 3),
-                          Text(item.contactInfo,
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.location_on_rounded,
+                            size: 13, color: Colors.grey[400]),
+                        const SizedBox(width: 3),
+                        Text(item.location,
+                            style: TextStyle(
+                                color: Colors.grey[400], fontSize: 12)),
+                        const SizedBox(width: 10),
+                        Icon(Icons.person_rounded,
+                            size: 13, color: Colors.grey[400]),
+                        const SizedBox(width: 3),
+                        Expanded(
+                          child: Text(item.contactInfo,
                               style: TextStyle(
-                                  color: Colors.grey[400], fontSize: 11)),
-                          const Spacer(),
-                          _ActionButton(
-                            icon: Icons.edit_rounded,
-                            color: cs.primary,
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => AddEditScreen(item: item)),
-                            ),
+                                  color: Colors.grey[400], fontSize: 12),
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        _StatusChip(isClaimed: isClaimed),
+                        const Spacer(),
+                        _IconBtn(
+                          icon: Icons.edit_rounded,
+                          color: const Color(0xFF00897B),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => AddEditScreen(item: item)),
                           ),
-                          const SizedBox(width: 4),
-                          _ActionButton(
-                            icon: Icons.delete_outline_rounded,
-                            color: Colors.red[400]!,
-                            onTap: () =>
-                                context.read<ItemCubit>().removeItem(item.id!),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                        const SizedBox(width: 6),
+                        _IconBtn(
+                          icon: Icons.delete_outline_rounded,
+                          color: Colors.red[400]!,
+                          onTap: () =>
+                              context.read<ItemCubit>().removeItem(item.id!),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -430,37 +584,61 @@ class _ItemCard extends StatelessWidget {
   }
 }
 
-class _StatusPill extends StatelessWidget {
-  final bool isClaimed;
-  const _StatusPill({required this.isClaimed});
+class _TypeBadge extends StatelessWidget {
+  final String type;
+  final Color color;
+  const _TypeBadge({required this.type, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: isClaimed
-            ? Colors.blueGrey.withOpacity(0.12)
-            : Colors.green.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(20),
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(
-        isClaimed ? 'Claimed' : 'Active',
-        style: TextStyle(
-          color: isClaimed ? Colors.blueGrey : Colors.green[700],
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+      child: Text(type,
+          style: TextStyle(
+              color: color, fontSize: 11, fontWeight: FontWeight.bold)),
     );
   }
 }
 
-class _ActionButton extends StatelessWidget {
+class _StatusChip extends StatelessWidget {
+  final bool isClaimed;
+  const _StatusChip({required this.isClaimed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: isClaimed ? Colors.blueGrey : Colors.green,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          isClaimed ? 'Claimed' : 'Active',
+          style: TextStyle(
+            color: isClaimed ? Colors.blueGrey : Colors.green[700],
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _IconBtn extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
-  const _ActionButton(
+  const _IconBtn(
       {required this.icon, required this.color, required this.onTap});
 
   @override
@@ -468,10 +646,10 @@ class _ActionButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.all(7),
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, size: 16, color: color),
       ),

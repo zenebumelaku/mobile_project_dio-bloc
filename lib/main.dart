@@ -5,20 +5,12 @@ import 'bloc/item_cubit.dart';
 import 'presentation/screens/home_screen.dart';
 
 void main() {
-  runApp(MainApp());
-}
-
-class MainApp extends StatelessWidget {
-  MainApp({super.key});
-
-  final _repo = ItemRepository();
-
-  @override
-  Widget build(BuildContext context) {
-    return RepositoryProvider.value(
-      value: _repo,
+  final repo = ItemRepository();
+  runApp(
+    RepositoryProvider.value(
+      value: repo,
       child: BlocProvider(
-        create: (context) => ItemCubit(_repo)..getItems(),
+        create: (_) => ItemCubit(repo)..getItems(),
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Campus Lost & Found',
@@ -47,7 +39,8 @@ class MainApp extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF00897B), width: 2),
+                borderSide:
+                    const BorderSide(color: Color(0xFF00897B), width: 2),
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -56,6 +49,6 @@ class MainApp extends StatelessWidget {
           home: const HomeScreen(),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
