@@ -1,26 +1,29 @@
-# Campus Lost & Found 📋
+# Campus Lost & Found
 
-**Student:** Zenebu Melaku
-**ID:** UGR/6058/16
-**Section:** 2
+Student: Zenebu Melaku
+ID:UGR/6058/16
+Section: 2
 
 A Flutter application for reporting and tracking lost & found items on campus. Built with Bloc state management and Dio for network requests.
 
 ## Features
-- 📋 View all lost & found reports
-- ➕ Create new reports
-- ✏️ Edit existing reports
-- 🗑️ Delete reports
-- 🔍 Search by title or location
-- 🏷️ Filter by All / Lost / Found
+
+- View all lost & found reports
+- Create new reports
+- Edit existing reports
+- Delete reports
+- Search by title or location
+- Filter by All / Lost / Found
 
 ## Tech Stack
+
 - **Flutter** — UI framework
 - **flutter_bloc** — state management
 - **Dio** — HTTP network requests
 - **MockAPI** — REST API backend
 
 ## Project Structure
+
 ```
 lib/
 ├── bloc/
@@ -43,13 +46,17 @@ lib/
 ## Screenshots
 
 ### Home Screen
+
 ![Home Screen](screenshots/home.png)
 
 ### Add New Item
+
 ![Add Item](screenshots/add.png)
 
 ### Edit Item
+
 ![Edit Item](screenshots/edit.png)
 
 ### After Delete
+
 ![After Delete](screenshots/delete.png)
