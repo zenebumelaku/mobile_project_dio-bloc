@@ -1,5 +1,9 @@
 # Campus Lost & Found 📋
 
+**Student:** Zenebu Melaku
+**ID:** UGR/6058/16
+**Section:** 2
+
 A Flutter application for reporting and tracking lost & found items on campus. Built with Bloc state management and Dio for network requests.
 
 ## Features
